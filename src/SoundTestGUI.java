@@ -1,9 +1,11 @@
 import javax.swing.*;
 
-import java.awt.Color;
-import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import javax.swing.plaf.basic.BasicSliderUI;
+import java.awt.*;
+
+
 
 public class SoundTestGUI implements ActionListener{
     JFrame frame;
@@ -12,8 +14,8 @@ public class SoundTestGUI implements ActionListener{
     JLabel timerlabel,title;
     AudioPlayer ap;
     Timer timer;
-    ImageIcon img;
-    JLabel imglabel;
+    ImageIcon img,background;
+    JLabel imglabel,backgroundLabel;
     JSlider volumeSlider,trackSlider;
     Song songs[] = new Song[3];
     int curr = 0;
@@ -35,6 +37,22 @@ public class SoundTestGUI implements ActionListener{
         prev = new JButton("prev");
         play = new JButton("paly/pause");
         trackSlider = new JSlider(JSlider.HORIZONTAL,0,100,0);
+        // After creating your trackSlider:
+        trackSlider.setUI(new BasicSliderUI(trackSlider) {
+            @Override
+            public void paintThumb(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                int diameter = 16; // Size of the round thumb
+                int x = thumbRect.x + (thumbRect.width - diameter) / 2;
+                int y = thumbRect.y + (thumbRect.height - diameter) / 2;
+                g2d.setColor(Color.DARK_GRAY);
+                g2d.fillOval(x, y, diameter, diameter);
+                g2d.setColor(Color.WHITE);
+                g2d.drawOval(x, y, diameter, diameter);
+                g2d.dispose();
+            }
+        });
         volumeSlider = new JSlider(JSlider.VERTICAL,0,100,75);
         play.setBounds(350/2,700/2,100,20);
         next.setBounds(550/2,700/2,100,20);
@@ -44,7 +62,10 @@ public class SoundTestGUI implements ActionListener{
         buttonpanel = new JPanel();
         timer = new Timer(1000, this);
         img = new ImageIcon(songs[curr].imgpath());
-        
+        background = new ImageIcon("C:\\Users\\Goutham\\Downloads\\Free Pixel Art Forest\\Free Pixel Art Forest\\Preview\\Background.png");
+        BackgroundPanel mainPanel = new BackgroundPanel(background);
+        mainPanel.setPreferredSize(new Dimension(450,450));
+        frame.setContentPane(mainPanel);
         //Slider styling
         volumeSlider.setMajorTickSpacing(20);
         volumeSlider.setPaintLabels(true);
@@ -52,7 +73,9 @@ public class SoundTestGUI implements ActionListener{
         volumeSlider.setForeground(Color.blue);
 
         imglabel = new JLabel(img);
+        backgroundLabel = new JLabel(background);
         imglabel.setBounds(120,100,200,200);
+        backgroundLabel.setBounds(0, 0, 450, 450);
         timerlabel = new JLabel("0.0");
         timerlabel.setBounds(150, 290, 150, 100);
         title = new JLabel(songs[curr].title());
@@ -68,15 +91,15 @@ public class SoundTestGUI implements ActionListener{
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
         frame.setLayout(null);
+        frame.getLayeredPane().add(backgroundLabel,new Integer(Integer.MIN_VALUE));
         frame.add(volumeSlider);
-        frame.add(trackSlider);
-        frame.add(next);
-        frame.add(prev);
-        frame.add(title);
-        frame.add(play);
-        frame.add(imglabel);
-        frame.add(timerlabel);
-        frame.getContentPane().setBackground(Color.CYAN);
+        mainPanel.add(trackSlider);
+        mainPanel.add(next);
+        mainPanel.add(prev);
+        mainPanel.add(title);
+        mainPanel.add(play);
+        mainPanel.add(imglabel);
+        mainPanel.add(timerlabel);
         play.addActionListener(this);
         next.addActionListener(this);
         volumeSlider.addChangeListener(e -> {
