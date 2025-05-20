@@ -21,6 +21,7 @@ public class SoundTestGUI implements ActionListener{
     int curr = 0;
 
     SoundTestGUI(){
+        ap = new AudioPlayer();
         songs[0] = new Song("retro game song",
             "C:\\Users\\Goutham\\Downloads\\gameaudio.wav",
             "C:\\Users\\Goutham\\Downloads\\credit_for_audio.png");
@@ -35,7 +36,7 @@ public class SoundTestGUI implements ActionListener{
         frame= new JFrame("Audio Player");
         next = new JButton("next");
         prev = new JButton("prev");
-        play = new JButton("paly/pause");
+        play = new JButton("play/pause");
         trackSlider = new JSlider(JSlider.HORIZONTAL,0,100,0);
         // After creating your trackSlider:
         trackSlider.setUI(new BasicSliderUI(trackSlider) {
@@ -96,15 +97,20 @@ public class SoundTestGUI implements ActionListener{
         volumeSlider.setPaintLabels(false);
         volumeSlider.setBackground(new Color(0,0,0,0)); // Transparent background
         volumeSlider.setForeground(new Color(60, 60, 60)); // Sleek dark gray
+        InputMap sliderInputMap = volumeSlider.getInputMap(JComponent.WHEN_FOCUSED);
+        sliderInputMap.put(KeyStroke.getKeyStroke("LEFT"), "none");
+        sliderInputMap.put(KeyStroke.getKeyStroke("RIGHT"), "none");
 
         imglabel = new JLabel(new ImageIcon(imgscale));
         backgroundLabel = new JLabel(background);
         imglabel.setBounds(120,100,200,200);
         backgroundLabel.setBounds(0, 0, 450, 450);
         timerlabel = new JLabel("0.0");
+        timerlabel.setFont(new Font("Open Sans",Font.BOLD,18));
         timerlabel.setBounds(150, 290, 150, 100);
         title = new JLabel(songs[curr].title());
-        title.setBounds(145,10,150,100);
+        title.setFont(new Font("Monospaced",Font.BOLD,20));
+        title.setBounds(120,10,200,100);
 
         title.setHorizontalAlignment(SwingConstants.CENTER);
         play.setHorizontalAlignment(SwingConstants.CENTER);
@@ -149,38 +155,81 @@ public class SoundTestGUI implements ActionListener{
         });
         prev.addActionListener(this);
         timer.start();
+        InputMap ipmap = frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap actionMap = frame.getRootPane().getActionMap();
+        ipmap.put(KeyStroke.getKeyStroke("SPACE"), "playpause");
+        actionMap.put("playpause", new AbstractAction(){
+            @Override
+            public void actionPerformed(ActionEvent e){
+                play.doClick();
+            }
+        });
+        ipmap.put(KeyStroke.getKeyStroke("RIGHT"), "next");
+        actionMap.put("next", new AbstractAction(){
+            @Override
+            public void actionPerformed(ActionEvent e){
+                next.doClick();
+            }
+        });
+        ipmap.put(KeyStroke.getKeyStroke("LEFT"), "left");
+        actionMap.put("left", new AbstractAction(){
+            @Override
+            public void actionPerformed(ActionEvent e){
+                prev.doClick();
+            }
+        });
+        ipmap.put(KeyStroke.getKeyStroke("UP"), "volumeUp");
+        actionMap.put("volumeUp", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int value = volumeSlider.getValue();
+                if (value < volumeSlider.getMaximum()) {
+                    volumeSlider.setValue(value + 5); // Increase by 5, adjust as needed
+                }
+            }
+        });
+        ipmap.put(KeyStroke.getKeyStroke("DOWN"), "volumeDown");
+        actionMap.put("volumeDown", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int value = volumeSlider.getValue();
+                if (value > volumeSlider.getMinimum()) {
+                    volumeSlider.setValue(value - 5); // Decrease by 5, adjust as needed
+                }
+            }
+        });
+        ap.loadSound(songs[curr].audiopath());
+        ap.setVolume(volumeSlider.getValue());
     }
     public void actionPerformed(ActionEvent e){
         if(e.getSource() == play){
-            if(ap==null){
-                ap = new AudioPlayer();
-                ap.loadSound(songs[curr].audiopath());
-                ap.setVolume(volumeSlider.getValue());
-                ap.play();
-            }
-            else{
-                ap.playorpause();
-            }
+            ap.playorpause();
         }
         if(e.getSource() == next){
+            boolean wasRunning = ap.getClip().isRunning();
             if(ap!=null){
                 ap.stop();
-                ap = null;
             }
             curr = (curr+1)%songs.length;
             updatesongDisplay();
-            play.doClick();
+            ap.loadSound(songs[curr].audiopath());
+            ap.setVolume(volumeSlider.getValue());
+            if(wasRunning) ap.getClip().start();
+            else ap.getClip().stop();
         }
         if(e.getSource() == prev){
             if(ap!=null){
+                boolean wasRunning = ap.getClip().isRunning();
                 if(ap.getCurrentTime()>1){
                     ap.replay();
                 }else{  
                     ap.stop();
-                    ap = null;
                     curr = (curr - 1 + songs.length) % songs.length;
+                    ap.loadSound(songs[curr].audiopath());
+                    ap.setVolume(volumeSlider.getValue());
                     updatesongDisplay();
-                    play.doClick();
+                    if(wasRunning) ap.getClip().start();
+                    else ap.getClip().stop();
                 }
             }
             
