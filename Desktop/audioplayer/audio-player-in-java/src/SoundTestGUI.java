@@ -4,39 +4,43 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.plaf.basic.BasicSliderUI;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 
 
 public class SoundTestGUI implements ActionListener{
     JFrame frame;
     JPanel panel,buttonpanel;
-    JButton play,next,prev;
+    JButton play,next,prev,addSongButton;
     JLabel timerlabel,title;
     AudioPlayer ap;
     Timer timer;
     ImageIcon img,background;
     JLabel imglabel,backgroundLabel;
     JSlider volumeSlider,trackSlider;
-    Song songs[] = new Song[3];
+    List<Song> songs = new ArrayList<>();
     int curr = 0;
 
     SoundTestGUI(){
         ap = new AudioPlayer();
-        songs[0] = new Song("retro game song",
+        songs.add(new Song("retro game song",
             "C:\\Users\\Goutham\\Downloads\\gameaudio.wav",
-            "C:\\Users\\Goutham\\Downloads\\credit_for_audio.png");
-        songs[1] = new Song("unnatuindi gundey",
+            "C:\\Users\\Goutham\\Downloads\\credit_for_audio.png"));
+        songs.add(new Song("unnatuindi gundey",
             "C:\\Users\\Goutham\\Downloads\\unnatundigundey.wav",
-            "C:\\Users\\Goutham\\Downloads\\Ninnu-Kori-Telugu-2017-20220323073319-500x500.png");
-        songs[2] = new Song("Varinche prema",
+            "C:\\Users\\Goutham\\Downloads\\Ninnu-Kori-Telugu-2017-20220323073319-500x500.png"));
+        songs.add(new Song("Varinche prema",
         "C:\\Users\\Goutham\\Downloads\\VarinchePrema.wav",
-        "C:\\Users\\Goutham\\Downloads\\Malli-Malli-Idi-Rani-Roju-Telugu-2014-500x500.png");
+        "C:\\Users\\Goutham\\Downloads\\Malli-Malli-Idi-Rani-Roju-Telugu-2014-500x500.png"));
         
         JLabel volumeLabel = new JLabel();
         frame= new JFrame("Audio Player");
         next = new JButton("next");
         prev = new JButton("prev");
         play = new JButton("play/pause");
+        addSongButton = new JButton("Add Song");
+        addSongButton.setBounds(350,80,90,20);
         trackSlider = new JSlider(JSlider.HORIZONTAL,0,100,0);
         // After creating your trackSlider:
         trackSlider.setUI(new BasicSliderUI(trackSlider) {
@@ -85,7 +89,7 @@ public class SoundTestGUI implements ActionListener{
         trackSlider.setBounds(100,385,250,30);
         buttonpanel = new JPanel();
         timer = new Timer(1000, this);
-        img = new ImageIcon(songs[curr].imgpath());
+        img = new ImageIcon(songs.get(curr).imgpath());
         Image imgscale = img.getImage().getScaledInstance(200, 200, Image.SCALE_SMOOTH);
         background = new ImageIcon("C:\\Users\\Goutham\\Downloads\\ChatGPT Image May 19, 2025, 07_38_53 PM.png");
         BackgroundPanel mainPanel = new BackgroundPanel(background);
@@ -108,7 +112,7 @@ public class SoundTestGUI implements ActionListener{
         timerlabel = new JLabel("0.0");
         timerlabel.setFont(new Font("Open Sans",Font.BOLD,18));
         timerlabel.setBounds(150, 290, 150, 100);
-        title = new JLabel(songs[curr].title());
+        title = new JLabel(songs.get(curr).title());
         title.setFont(new Font("Monospaced",Font.BOLD,20));
         title.setBounds(120,10,200,100);
 
@@ -131,6 +135,7 @@ public class SoundTestGUI implements ActionListener{
         mainPanel.add(play);
         mainPanel.add(imglabel);
         mainPanel.add(timerlabel);
+        mainPanel.add(addSongButton);
         play.addActionListener(this);
         next.addActionListener(this);
         volumeSlider.addChangeListener(e -> {
@@ -198,8 +203,35 @@ public class SoundTestGUI implements ActionListener{
                 }
             }
         });
-        ap.loadSound(songs[curr].audiopath());
+        ap.loadSound(songs.get(curr).audiopath());
         ap.setVolume(volumeSlider.getValue());
+        
+        // Add song button action
+        addSongButton.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Select Audio File");
+            int result = fileChooser.showOpenDialog(frame);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                String audioPath = fileChooser.getSelectedFile().getAbsolutePath();
+                String title = JOptionPane.showInputDialog(frame, "Enter song title:");
+                if (title == null || title.trim().isEmpty()) return;
+
+                // Optionally, select an image
+                int imgResult = JOptionPane.showConfirmDialog(frame, "Add cover image?", "Cover Image", JOptionPane.YES_NO_OPTION);
+                String imgPath = "";
+                if (imgResult == JOptionPane.YES_OPTION) {
+                    JFileChooser imgChooser = new JFileChooser();
+                    imgChooser.setDialogTitle("Select Cover Image");
+                    if (imgChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
+                        imgPath = imgChooser.getSelectedFile().getAbsolutePath();
+                    }
+                }
+
+                // Add new song
+                songs.add(new Song(title, audioPath, imgPath));
+                JOptionPane.showMessageDialog(frame, "Song added!");
+            }
+        });
     }
     public void actionPerformed(ActionEvent e){
         if(e.getSource() == play){
@@ -210,9 +242,9 @@ public class SoundTestGUI implements ActionListener{
             if(ap!=null){
                 ap.stop();
             }
-            curr = (curr+1)%songs.length;
+            curr = (curr+1)%songs.size();
             updatesongDisplay();
-            ap.loadSound(songs[curr].audiopath());
+            ap.loadSound(songs.get(curr).audiopath());
             ap.setVolume(volumeSlider.getValue());
             if(wasRunning) ap.getClip().start();
             else ap.getClip().stop();
@@ -224,8 +256,8 @@ public class SoundTestGUI implements ActionListener{
                     ap.replay();
                 }else{  
                     ap.stop();
-                    curr = (curr - 1 + songs.length) % songs.length;
-                    ap.loadSound(songs[curr].audiopath());
+                    curr = (curr - 1 + songs.size()) % songs.size();
+                    ap.loadSound(songs.get(curr).audiopath());
                     ap.setVolume(volumeSlider.getValue());
                     updatesongDisplay();
                     if(wasRunning) ap.getClip().start();
@@ -249,12 +281,12 @@ public class SoundTestGUI implements ActionListener{
         }
     }
     void updatesongDisplay(){
-        ImageIcon originalIcon = new ImageIcon(songs[curr].imgpath());
+        ImageIcon originalIcon = new ImageIcon(songs.get(curr).imgpath());
         Image scaledImage = originalIcon.getImage().getScaledInstance(200, 200, Image.SCALE_SMOOTH);
         ImageIcon scaledIcon = new ImageIcon(scaledImage);
         imglabel.setIcon(scaledIcon);
         imglabel.repaint();
-        title.setText(songs[curr].title());
+        title.setText(songs.get(curr).title());
     }
     public static void main(String[] args) {
         new SoundTestGUI();
