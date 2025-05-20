@@ -32,7 +32,7 @@ public class SoundTestGUI implements ActionListener{
         "C:\\Users\\Goutham\\Downloads\\VarinchePrema.wav",
         "C:\\Users\\Goutham\\Downloads\\Malli-Malli-Idi-Rani-Roju-Telugu-2014-500x500.png");
         
-        
+        JLabel volumeLabel = new JLabel();
         frame= new JFrame("Audio Player");
         next = new JButton("next");
         prev = new JButton("prev");
@@ -184,7 +184,7 @@ public class SoundTestGUI implements ActionListener{
             public void actionPerformed(ActionEvent e) {
                 int value = volumeSlider.getValue();
                 if (value < volumeSlider.getMaximum()) {
-                    volumeSlider.setValue(value + 5); // Increase by 5, adjust as needed
+                    volumeSlider.setValue(value + 5);
                 }
             }
         });
